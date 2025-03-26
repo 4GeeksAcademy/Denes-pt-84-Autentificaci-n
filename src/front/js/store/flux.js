@@ -13,7 +13,14 @@ const getState = ({ getStore, getActions, setStore }) => {
 					background: "white",
 					initial: "white"
 				}
-			]
+			],
+			User:{
+				name:"",
+				email: "",
+				password: ""
+				
+			}, 
+			profile: null
 		},
 		actions: {
 			// Use getActions to call a function within a fuction
@@ -46,6 +53,56 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 				//reset the global store
 				setStore({ demo: demo });
+			},
+
+			register: async (userData) => {
+				const resp = await fetch(process.env.BACKEND_URL + "register", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ userData })
+				})
+
+				if (!resp.ok) throw Error("Hubo un problema con la petición de /register")
+
+				if (resp.status === 400) {
+					throw ("Hubo un problema con los datos enviados para el registro")
+				}
+
+				const data = await resp.json()
+				console.log('mi registro', data)
+			},
+
+			login: async (email, password) => {
+				try {
+					const resp = await fetch(process.env.BACKEND_URL + "/login", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ email, password })
+					})
+					if (!resp.ok) {
+						const errorData = await resp.json()
+						throw new Error(errorData.message || "Error en la autenticación")
+					}
+
+					const data = await resp.json()
+					localStorage.setItem("token", data.token);
+					
+
+					return data;
+				} catch (error) {
+					console.error("Error en login:", error.message)
+					return false
+				}
+			},
+
+			setUser: (data) => {
+				const store = getStore();
+				setStore({ ...store, ...data })
+			},
+
+			logout: async () => {
+				localStorage.removeItem("token")
+				setStore({ user: [] })
 			}
 		}
 	};
