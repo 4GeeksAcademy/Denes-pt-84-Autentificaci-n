@@ -1,7 +1,7 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, } from "react";
 import { Context } from "../store/appContext.js";
-
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import "../../styles/signUp.css";
 
 
 export const Login = () => {
@@ -24,11 +24,11 @@ export const Login = () => {
         e.preventDefault();
 
         if (dataLogin.email && dataLogin.password) {
-            const loginSuccess = await actions.login(store.email, store.password);
+            const loginSuccess = await actions.login(dataLogin);
 
             if (loginSuccess) {
                 console.log("Usuario logueado correctamente.");
-                navigate("/profile"); // Redirige directamente al perfil del usuario
+                navigate("/private");
             } else {
                 setLoginError(<p className="text-danger">User or Password incorrect!</p>);
                 console.log("Error: Usuario o contraseña incorrectos.");
@@ -39,7 +39,7 @@ export const Login = () => {
     };
 
     return (
-        <div>
+        <div className="sign-form">
             <h3>Log in to your profile</h3>
             <form>
                 <div className="form-floating mb-3">
@@ -50,7 +50,12 @@ export const Login = () => {
                     <input type="password" name="password" className="form-control" id="floatingPassword" value={store.password} onChange={handleChange} placeholder="Password" />
                     <label for="floatingPassword">Password</label>
                 </div>
-                <button type="submit" className="btn btn-primary mt-3"  onClick={sendData}>Iniciar sesión</button>
+                <div className='buttons'>
+                    <button type="submit" className="btn btn-primary mt-3" onClick={sendData}>Log In</button>
+                    <Link to="/">
+                        <button className="btn btn-secondary mt-3">Home</button>
+                    </Link>
+                </div>
             </form>
         </div>
     );

@@ -10,6 +10,7 @@ from api.models import db, User
 from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
+from datetime import timedelta
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -17,18 +18,23 @@ from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 
 from flask_bcrypt import Bcrypt
-
+from flask_cors import CORS
 # from models import Person
 
 ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
 static_file_dir = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), '../public/')
 app = Flask(__name__)
+CORS(app)
 app.url_map.strict_slashes = False
 
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_KEY")
+
+
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
+
 
 # database condiguration
 db_url = os.getenv("DATABASE_URL")
@@ -91,7 +97,7 @@ def login():
     check_password = bcrypt.check_password_hash(user.password, body['password'])
 
     if user is None or check_password == False: 
-        return jsonify({'msg': 'correo o contraseña invalidos'})
+        return jsonify({'msg': 'correo o contraseña invalidos'}), 401
     
     access_token = create_access_token(identity=user.email)
     return jsonify({'token' : access_token})
@@ -107,6 +113,8 @@ def register():
     body = request.get_json(silent=True)
     if body == None: 
         return jsonify ({'msg': 'Debes enviar info al body: email y password'}), 400
+    if 'name' not in body: 
+        return jsonify({'msg': 'Debes escribir un nombre'}), 400
     if 'email' not in body: 
         return jsonify({'msg': 'Debes escribir un email'}), 400
     if 'password' not in body: 
@@ -116,6 +124,7 @@ def register():
     if user is not None:
         return jsonify({'msg': f'el correo {body["email"]} ya ha sido registrado'}), 400
     new_user = User()
+    new_user.name = body['name']
     new_user.email = body['email']
     new_user.password = bcrypt.generate_password_hash(body['password']).decode('utf-8')
     new_user.is_active = True

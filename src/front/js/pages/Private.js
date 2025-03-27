@@ -1,14 +1,28 @@
-import React from 'react'
+import React, { useContext, useEffect, } from 'react';
+import { Context } from "../store/appContext";
+import { useNavigate } from 'react-router-dom';
 
 const Private = () => {
-  return (
-    <div>
-      <h2>This is your profile "nombre del Usuario"</h2>
-    </div>
-  )
-}
+    const { store, actions } = useContext(Context);
+    const navigate = useNavigate();
 
-export default Private
+    useEffect(() => {
+        const token = localStorage.getItem("token");
 
+        if (!token) {
+            navigate("/login");
+            return;
+        } else{
+            actions.private()
+        }}, [])
+
+    return (
+        <div className='sign-form'>
+            <h2>Hello, how are you {store.profile? store.profile : "Loading..."}</h2>
+        </div>
+    );
+};
+
+export default Private;
 
 

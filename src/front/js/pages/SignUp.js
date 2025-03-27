@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import { Context } from "../store/appContext.js";
 import { Link, useNavigate } from "react-router-dom";
+import "../../styles/signUp.css";
 
 
 
@@ -9,9 +10,10 @@ export const SignUp = () => {
     const navigate = useNavigate()
 
     const [userData, setUserData] = useState({
+        name: "",
         email: "",
         password: "",
-        name: ""
+
     })
 
     const [errorData, setErrorData] = useState("")
@@ -19,65 +21,35 @@ export const SignUp = () => {
     const handleChange = (e) => {
         const { name, value } = e.target
         setUserData({ ...userData, [name]: value })
-
-        actions.setUser({ ...store, [name]: value })
     }
+
     console.log(userData)
-    const sendData = (e) => {
-        e.preventDefault()
-
-        actions.register(userData)
-        console.log('datos enviados')
-
-        // if (store.email && store.password && store.name) {
-        //     if (!validateEmail(userData.email)) {
-        //         setErrorData(<p className="text-danger">Formato de email inválido.</p>)
-        //         return;
-        //     } else {
-        //         try {
-        //             const registerSuccess = await actions.register(store.email, store.password, store.name)
-
-        //             if (registerSuccess) {
-        //                 const loginSuccess = await actions.login(store.email, store.password)
-
-        //                 if (loginSuccess) {
-        //                     console.log("Usuario registrado y logueado correctamente.")
-        //                     actions.clearUser()
-        //                     navigate("/registerData")
-        //                 } else {
-        //                     console.log("Error al iniciar sesión después del registro.")
-        //                 }
-        //             }
-        //         } catch (error) {
-        //             setErrorData(<p className="text-danger">Already registered email.</p>)
-        //             console.error("Error en el proceso de registro/login:", error)
-        //         }
-        //     }
-        // } else {
-        //     setErrorData(<p className="text-danger">Required fields.</p>)
-        // }
+    const sendData = async (e) => {
+        e.preventDefault();
+        const success = await actions.register(userData);
+        if (success) {
+            navigate("/login");
+        } else {
+            setErrorData("this user already exists");
+        }
     };
-
-    // const validateEmail = (email) => {
-    //     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    //     return emailRegex.test(email)
-    // }
 
     useEffect(() => {
         if (store.email === "" && store.password === "" && store.name === "") {
-            setUserData({ email: "", password: "", name: "" })
+            setUserData({ name: "", email: "", password: "" })
         }
-    }, [store.email, store.password, store.name])
+    }, [store.name, store.password, store.email])
 
 
     return (
         <div className='sign-form'>
             <h3>Complete the form to create your account</h3>
+            {errorData && <p className="text-danger">{errorData}</p>}
             <form>
                 <div className="form-floating mb-3">
 
-                    <input type="name" name="name" className="form-control" id="floatingInput1" value={userData.name} onChange={handleChange} />
-                    <label for="floatingInput">Name</label>
+                    <input type="text" name="name" className="form-control" id="floatingInput1" value={userData.name} onChange={handleChange} />
+                    <label for="floatingInput1">Name</label>
 
                 </div>
                 <div className="form-floating mb-3">
@@ -92,7 +64,12 @@ export const SignUp = () => {
                     <label for="floatingPassword">Password</label>
 
                 </div>
-                <button type="submit" className="btn btn-success" onClick={sendData} >Create Account</button>
+                <div className='buttons'>
+                    <button type="submit" className="btn btn-success mt-3" onClick={sendData} >Create Account</button>
+                    <Link to="/">
+                        <button className="btn btn-secondary mt-3">Home</button>
+                    </Link>
+                </div>
             </form>
         </div>
     );

@@ -14,12 +14,12 @@ const getState = ({ getStore, getActions, setStore }) => {
 					initial: "white"
 				}
 			],
-			User:{
-				name:"",
+			User: {
+				name: "",
 				email: "",
 				password: ""
-				
-			}, 
+
+			},
 			profile: null
 		},
 		actions: {
@@ -29,14 +29,14 @@ const getState = ({ getStore, getActions, setStore }) => {
 			},
 
 			getMessage: async () => {
-				try{
+				try {
 					// fetching data from the backend
 					const resp = await fetch(process.env.BACKEND_URL + "/api/hello")
 					const data = await resp.json()
 					setStore({ message: data.message })
 					// don't forget to return something, that is how the async resolves
 					return data;
-				}catch(error){
+				} catch (error) {
 					console.log("Error loading message from backend", error)
 				}
 			},
@@ -56,28 +56,37 @@ const getState = ({ getStore, getActions, setStore }) => {
 			},
 
 			register: async (userData) => {
-				const resp = await fetch(process.env.BACKEND_URL + "register", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ userData })
-				})
-
-				if (!resp.ok) throw Error("Hubo un problema con la petición de /register")
-
-				if (resp.status === 400) {
-					throw ("Hubo un problema con los datos enviados para el registro")
-				}
-
-				const data = await resp.json()
-				console.log('mi registro', data)
-			},
-
-			login: async (email, password) => {
+				console.log(userData)
 				try {
-					const resp = await fetch(process.env.BACKEND_URL + "/login", {
+
+					const resp = await fetch("https://animated-waffle-q795g5w5wgqg24569-3001.app.github.dev/register", {
 						method: "POST",
 						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ email, password })
+						body: JSON.stringify(userData)
+					})
+
+					if (!resp.ok) throw Error("Hubo un problema con la petición de /register")
+
+					if (resp.status === 400) {
+						throw ("Hubo un problema con los datos enviados para el registro")
+					}
+
+					const data = await resp.json()
+					console.log('mi registro', data)
+					return true
+
+				} catch (error) {
+					console.error('error en el registro', error.message)
+					return false
+				}
+			},
+
+			login: async (dataLogin) => {
+				try {
+					const resp = await fetch("https://animated-waffle-q795g5w5wgqg24569-3001.app.github.dev/login", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify(dataLogin)
 					})
 					if (!resp.ok) {
 						const errorData = await resp.json()
@@ -86,7 +95,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 					const data = await resp.json()
 					localStorage.setItem("token", data.token);
-					
+
 
 					return data;
 				} catch (error) {
@@ -95,16 +104,43 @@ const getState = ({ getStore, getActions, setStore }) => {
 				}
 			},
 
+			private: async () => {
+				const token = localStorage.getItem("token");
+				if (!token) {
+					return null;
+				}
+
+				try {
+					const resp = await fetch(process.env.BACKEND_URL + "/private", {
+						method: "GET",
+						headers: {
+							"Content-Type": "application/json",
+							"Authorization": `Bearer ${token}`,
+						},
+					});
+					if (!resp.ok) throw new Error("No autorizado");
+
+					const data = await resp.json();
+					setStore({ profile: data.user });
+					console.log(data)
+					return data.user;
+				} catch (error) {
+					console.error(error);
+					setStore({ profile: null });
+					return null;
+				}
+			},
+
 			setUser: (data) => {
 				const store = getStore();
-				setStore({ ...store, ...data })
+				setStore({ ...store, User: { ...store.User, ...data } });
 			},
 
 			logout: async () => {
 				localStorage.removeItem("token")
-				setStore({ user: [] })
+				setStore({ User: { name: "", email: "", password: "" } })
 			}
-		}
+		},
 	};
 };
 
